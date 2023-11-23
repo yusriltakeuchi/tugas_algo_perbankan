@@ -1,9 +1,8 @@
 #include <iostream>
-#include <conio.h>
 #include <vector>
 #include <sstream>
 #include <cstdlib>
-#include <map>
+#include <iomanip>
 #include <string>
 
 using namespace std;
@@ -51,6 +50,61 @@ class Helper {
             int result = 0;
             ss >> result;
             return result;
+        }
+};
+
+class KTA {
+    public:
+        int start() {
+            cin.ignore();
+            string no_rekening = Helper::inputData("Nomor Rekening");
+            string no_ktp = Helper::inputData("Nomor Identitas Penduduk (KTP)");
+            string no_kk = Helper::inputData("Nomor Kartu Keluarga (KK)");
+            string no_npwp = Helper::inputData("Nomor NPWP");
+            int slip_gaji = Helper::to_int(Helper::inputData("Slip Gaji"));
+
+            float dana_cair;
+            int nominal_pinjaman = getNominalPinjaman();
+            int tenor = getTenor();
+            float bunga = 0.5;
+
+            float hitungTenor = (((float)tenor / 12) / (float)tenor);
+            hitungTenor = round(hitungTenor * 100) / 100;
+
+            dana_cair =  (float)nominal_pinjaman - (((float)nominal_pinjaman * bunga) * hitungTenor);
+            dana_cair = round(dana_cair * 100) / 100;
+
+            cout << "\n=================================";
+            cout << "\nDANA CAIR: Rp" <<  fixed << setprecision(0) << dana_cair;
+            cout << "\n=================================";
+
+            return 1;
+        }
+
+        int getNominalPinjaman() {
+            int pinjaman = 0;
+            while (true) {
+                pinjaman = Helper::to_int(Helper::inputData("Nominal Pinjaman"));
+                if (pinjaman <= 100000000) {
+                    break;
+                } else {
+                    cout << "[Error] Nominal pinjaman tidak bisa lebih dari 100jt\n";
+                }
+            }
+            return pinjaman;
+        }
+
+        int getTenor() {
+            int tenor = 0;
+            while (true) {
+                tenor = Helper::to_int(Helper::inputData("Tenor Pinjaman [1-12]"));
+                if (tenor <= 12) {
+                    break;
+                } else {
+                    cout << "[Error] Tenor pinjaman tidak bisa lebih dari 12 bulan\n";
+                }
+            }
+            return tenor;
         }
 };
 
@@ -193,11 +247,13 @@ void chooseMenu() {
     cout << "\n1. Pembukaan Rekening";
     cout << "\n2. Deposito";
     cout << "\n3. Kredit Tanpa Agunan (KTA)";
+    cout << "\n4. Keluar";
 
     int menu;
     cout << "\nSilahkan pilih layanan: ";cin >> menu;
 
     PemukaanRekening pemukaanRekening;
+    KTA kta;
     int status;
     switch(menu) {
         case 1:
@@ -206,6 +262,10 @@ void chooseMenu() {
         case 2:
             break;
         case 3:
+            status = kta.start();
+            break;
+        case 4:
+            exit(0);
             break;
         default:
             cout << "Pilihan menu tidak ditemukan";
@@ -217,8 +277,6 @@ void chooseMenu() {
         cout << "\nApakah Anda ingin memilih layanan lainnya lagi? [y/n]\n";
         string choose = Helper::inputData("Pilihan");
         if (choose == "y" || choose == "yes") {
-            /// clear screen
-            system("cls");
             chooseMenu();
         } else {
             cout << "\nTerima kasih telah melakukan transaksi dengan kami";
