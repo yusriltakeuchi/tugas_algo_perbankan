@@ -66,7 +66,7 @@ class Deposito {
         int start() {
             cin.ignore();
             string sumber_rekening_pendebit = Helper::inputData("Sumber Rekening Pendebit");
-            int tenor_deposito = Helper::to_int(Helper::inputData("Tenor Deposito [1-12]"));
+            int tenor_deposito = getTenor();
             int nominal_deposito = Helper::to_int(Helper::inputData("Nominal Deposito"));
 
             /// Bunga 3.25%
@@ -102,6 +102,19 @@ class Deposito {
             cout << "\nInstruksi Jatuh Tempo: " << pilihan_instruksi_jatuh_tempo;
             cout << "\n=================================";
             return 1;
+        }
+
+        int getTenor() {
+            int tenor = 0;
+            while (true) {
+                tenor = Helper::to_int(Helper::inputData("Tenor Deposito [1-12]"));
+                if (tenor <= 12) {
+                    break;
+                } else {
+                    cout << "[Error] Tenor deposito tidak bisa lebih dari 12 bulan\n";
+                }
+            }
+            return tenor;
         }
 };
 
