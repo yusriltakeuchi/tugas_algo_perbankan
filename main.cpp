@@ -8,6 +8,37 @@
 
 using namespace std;
 
+
+class Nasabah {
+    private:
+        string no_rekening;
+        string nama;
+        string username;
+        string password;
+        string email;
+    public:
+        Nasabah(string _no_rekening, string _nama, string _username, string _password, string _email) {
+            no_rekening = _no_rekening;
+            nama = _nama;
+            username = _username;
+            password = _password;
+            email = _email;
+        }
+
+        string getUsername() {
+            return username;
+        }
+
+        // Fungsi validasi login
+        bool validateLogin(string _username, string _password) const {
+            return (_username == username && _password == password);
+        }
+};
+
+/// List nasabah 
+Nasabah *nasabah[100];
+int registeredNasabah = 0;
+
 class Helper {
     public:
         static string generateRandomDigitNumber(int length) {
@@ -32,10 +63,14 @@ class Helper {
             return items[selectedItem-1];
         }
 
-        static string inputData(string title) {
+        static string inputData(string title, string message = "") {
             cout << "------------------------------\n";
             string value;
-            cout << "Masukkan " << title << ": ";
+            if (message != "") {
+                cout << message;
+            } else {
+                cout << "Masukkan " << title << ": ";
+            }
             std::getline(std::cin, value);
             if (value == "") {
             	cout << "\nData tidak boleh kosong\n";
@@ -58,6 +93,7 @@ class Helper {
         }
 };
 
+
 class Deposito {
     public:
         string instruksi_jatuh_tempo[2] = {
@@ -73,10 +109,10 @@ class Deposito {
             float bunga = 0.0325;
 
             float bunga_deposito;
-            float hitungTenor = (((float)tenor_deposito / 12) / (float)tenor_deposito);
-            hitungTenor = round(hitungTenor * 100) / 100;
+            float hitung_tenor = (((float)tenor_deposito / 12) / (float)tenor_deposito);
+            hitung_tenor = round(hitung_tenor * 100) / 100;
             
-            bunga_deposito = (float)nominal_deposito * bunga * hitungTenor * 0.8;
+            bunga_deposito = (float)nominal_deposito * bunga * hitung_tenor * 0.8;
             cout << "\nBunga Deposito: Rp" << fixed << setprecision(0) << bunga_deposito;
 
             /// Pilihan deposito:
@@ -111,7 +147,7 @@ class Deposito {
                 if (tenor <= 12) {
                     break;
                 } else {
-                    cout << "[Error] Tenor deposito tidak bisa lebih dari 12 bulan\n";
+                    cout << "Tenor deposito tidak bisa lebih dari 12 bulan\n";
                 }
             }
             return tenor;
@@ -166,14 +202,14 @@ class KTA {
                 if (tenor <= 12) {
                     break;
                 } else {
-                    cout << "[Error] Tenor pinjaman tidak bisa lebih dari 12 bulan\n";
+                    cout << "Tenor pinjaman tidak bisa lebih dari 12 bulan\n";
                 }
             }
             return tenor;
         }
 };
 
-class PemukaanRekening {
+class PembukaanRekening {
     public:
         string branchs[5] = {
             "Slipi", "Kemanggisan", "Kebon Jeruk", "Kebayoran Lama", "Kebayoran Baru",
@@ -251,9 +287,16 @@ class PemukaanRekening {
                 cout << "\n=================================";
                 cout << "\nNomor Rekening: " << noRekening;
                 cout << "\n=================================";
+
+                addNasabah(Nasabah(noRekening, fullName, username, password, email));
                 return 1;
             }
             return 0;
+        }
+
+        void addNasabah(Nasabah _nasabah) {
+            nasabah[registeredNasabah] = &_nasabah;
+            registeredNasabah++;
         }
 
         /// no Rekening = savingTypeCode + branchCode + random7DigitNumber
@@ -305,6 +348,30 @@ class PemukaanRekening {
         }
 };
 
+class Authentication {
+    private:
+        bool loginUser(const string& username, const string& password) {
+            for (int i = 0; i < registeredNasabah; ++i) {
+                if (nasabah[i]->validateLogin(username, password)) {
+                    return true;
+                }
+            }
+            cout << "\nLogin gagal. Username atau password salah.\n" << endl;
+            return false;
+        }
+    public:
+        int auth() {
+            /// login account
+            string username = Helper::inputData("Username");
+            string password = Helper::inputData("Password");
+            if (loginUser(username, password)) {
+                return 1;
+            }
+            return 0;
+        } 
+};
+
+void auth();
 void chooseMenu() {
     cout << "\n=================================";
     cout << "\n    PERBANKAN KELOMPOK 2         ";
@@ -317,19 +384,16 @@ void chooseMenu() {
     int menu;
     cout << "\nSilahkan pilih layanan: ";cin >> menu;
 
-    PemukaanRekening pemukaanRekening;
-    KTA kta;
-    Deposito deposito;
     int status;
     switch(menu) {
         case 1:
-            status = pemukaanRekening.start();
+            status = PembukaanRekening().start();
             break;
         case 2:
-            status = deposito.start();
+            status = KTA().start();
             break;
         case 3:
-            status = kta.start();
+            status = Deposito().start();
             break;
         case 4:
             exit(0);
@@ -344,14 +408,49 @@ void chooseMenu() {
         cout << "\nApakah Anda ingin memilih layanan lainnya lagi? [y/n]\n";
         string choose = Helper::inputData("Pilihan");
         if (choose == "y" || choose == "yes") {
-            chooseMenu();
+            auth();
         } else {
             cout << "\nTerima kasih telah melakukan transaksi dengan kami";
         }    
     }
 }
 
+void auth() {
+    string registered = Helper::inputData("", "Anda sudah punya akun? [y/n]: ");
+    if (registered == "y" || registered == "yes") {
+        int login_result = Authentication().auth();
+        if (login_result == 1) {
+            cout << "Pilih menu";
+            chooseMenu();
+        } else {
+            auth();
+        }
+    } else {
+        int status = PembukaanRekening().start();
+        if (status == 1) {
+            cout << "\nApakah Anda ingin memilih layanan lainnya lagi? [y/n]\n";
+            string choose = Helper::inputData("Pilihan");
+            if (choose == "y" || choose == "yes") {
+                auth();
+            } else {
+                cout << "\nTerima kasih telah melakukan transaksi dengan kami";
+            }    
+        }
+    }
+}
+
+void addNasabah(Nasabah _nasabah) {
+    nasabah[registeredNasabah] = &_nasabah;
+    registeredNasabah++;
+}
+
 int main() {
-    chooseMenu();
+    cout << "\n=================================";
+    cout << "\n    PERBANKAN KELOMPOK 2         ";
+    cout << "\n=================================\n";
+
+    /// Add sample dummy nasabah
+    addNasabah(Nasabah("0100000000000001", "Rizky", "rizky", "123456", "yusril@gmail.com"));
+    auth();
     return 0;
 }
