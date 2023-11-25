@@ -37,6 +37,10 @@ class Helper {
             string value;
             cout << "Masukkan " << title << ": ";
             std::getline(std::cin, value);
+            if (value == "") {
+            	cout << "\nData tidak boleh kosong\n";
+            	return inputData(title);
+			}
             return value;
         }
 
