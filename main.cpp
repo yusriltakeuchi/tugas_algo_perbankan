@@ -58,6 +58,53 @@ class Helper {
         }
 };
 
+class Deposito {
+    public:
+        string instruksi_jatuh_tempo[2] = {
+            "Perpanjang Pokok", "Berhenti",
+        };
+        int start() {
+            cin.ignore();
+            string sumber_rekening_pendebit = Helper::inputData("Sumber Rekening Pendebit");
+            int tenor_deposito = Helper::to_int(Helper::inputData("Tenor Deposito [1-12]"));
+            int nominal_deposito = Helper::to_int(Helper::inputData("Nominal Deposito"));
+
+            /// Bunga 3.25%
+            float bunga = 0.0325;
+
+            float bunga_deposito;
+            float hitungTenor = (((float)tenor_deposito / 12) / (float)tenor_deposito);
+            hitungTenor = round(hitungTenor * 100) / 100;
+            
+            bunga_deposito = (float)nominal_deposito * bunga * hitungTenor * 0.8;
+            cout << "\nBunga Deposito: Rp" << fixed << setprecision(0) << bunga_deposito;
+
+            /// Pilihan deposito:
+            /// 1. Perpanjang Pokok 
+            /// 2. Berhenti
+            string pilihan_instruksi_jatuh_tempo = Helper::pickDataArray(instruksi_jatuh_tempo, 2, "Instruksi Jatuh Tempo", "instruksi jatuh tempo");
+            cin.ignore();
+
+            if (pilihan_instruksi_jatuh_tempo == "Perpanjang Pokok") {
+                cout << "\nAnda memilih perpanjang pokok\n";
+            } else {
+                cout << "\nAnda memilih berhenti\n";
+            }
+
+            cout << "\n=================================";
+            cout << "\n    DEPOSITO                    ";
+            cout << "\n=================================";
+            cout << "\nSumber Rekening Pendebit: " << sumber_rekening_pendebit;
+            cout << "\nTenor Deposito: " << tenor_deposito;
+            cout << "\nNominal Deposito: Rp" << fixed << setprecision(0) << nominal_deposito;
+            cout << "\nBunga: " << fixed << setprecision(4) << bunga << "%";
+            cout << "\nBunga Deposito: Rp" << fixed << setprecision(0) << bunga_deposito << "/tahun";
+            cout << "\nInstruksi Jatuh Tempo: " << pilihan_instruksi_jatuh_tempo;
+            cout << "\n=================================";
+            return 1;
+        }
+};
+
 class KTA {
     public:
         int start() {
@@ -259,12 +306,14 @@ void chooseMenu() {
 
     PemukaanRekening pemukaanRekening;
     KTA kta;
+    Deposito deposito;
     int status;
     switch(menu) {
         case 1:
             status = pemukaanRekening.start();
             break;
         case 2:
+            status = deposito.start();
             break;
         case 3:
             status = kta.start();
