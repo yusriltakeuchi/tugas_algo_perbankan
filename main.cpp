@@ -5,94 +5,14 @@
 #include <iomanip>
 #include <string>
 #include <cmath>
+#include "models/nasabah.cpp"
+#include "utils/helper.cpp"
+#include "services/authentication.cpp"
 
 using namespace std;
 
-
-class Nasabah {
-    private:
-        string no_rekening;
-        string nama;
-        string username;
-        string password;
-        string email;
-    public:
-        Nasabah(string _no_rekening, string _nama, string _username, string _password, string _email) {
-            no_rekening = _no_rekening;
-            nama = _nama;
-            username = _username;
-            password = _password;
-            email = _email;
-        }
-
-        string getUsername() {
-            return username;
-        }
-
-        // Fungsi validasi login
-        bool validateLogin(string _username, string _password) const {
-            return (_username == username && _password == password);
-        }
-};
-
-/// List nasabah 
-Nasabah *nasabah[100];
-int registeredNasabah = 0;
-
-class Helper {
-    public:
-        static string generateRandomDigitNumber(int length) {
-            string randomString = "";
-            for (int i = 0; i < length; i++) {
-                randomString += to_string(rand() % 10);
-            }
-            return randomString;
-        }
-
-        static string pickDataArray(string items[], int length, string title, string subtitle) {
-            cout << "\n=================================";
-            cout << "\n    Daftar " << title << "       ";
-            cout << "\n=================================";
-
-            for(int k = 0; k < length; k++) {
-                cout << "\n" << k+1 << ". " << items[k];
-            }
-            int selectedItem = 0;
-            cout << "\nSilahkan pilih " << subtitle << " : ";cin >> selectedItem;
-            cout << "\n";
-            return items[selectedItem-1];
-        }
-
-        static string inputData(string title, string message = "") {
-            cout << "------------------------------\n";
-            string value;
-            if (message != "") {
-                cout << message;
-            } else {
-                cout << "Masukkan " << title << ": ";
-            }
-            std::getline(std::cin, value);
-            if (value == "") {
-            	cout << "\nData tidak boleh kosong\n";
-            	return inputData(title);
-			}
-            return value;
-        }
-
-        static std::string to_string(int i) {
-            std::stringstream ss;
-            ss << i;
-            return ss.str();
-        } 
-
-        static int to_int(std::string s) {
-            std::stringstream ss(s);
-            int result = 0;
-            ss >> result;
-            return result;
-        }
-};
-
+/// Create instance object authentication
+Authentication authentication = Authentication();
 
 class Deposito {
     public:
@@ -175,7 +95,7 @@ class KTA {
             dana_cair =  (float)nominal_pinjaman - (((float)nominal_pinjaman * bunga) * hitungTenor);
             dana_cair = round(dana_cair * 100) / 100;
 
-            cout << "\n=================================";
+            cout << "=================================";
             cout << "\nDANA CAIR: Rp" <<  fixed << setprecision(0) << dana_cair;
             cout << "\n=================================";
 
@@ -265,7 +185,6 @@ class PembukaanRekening {
             );
 
             if (noRekening != "") {
-                /// print all data input and no rekening
                 cout << "\n=================================";
                 cout << "\n    Data Pembukaan Rekening       ";
                 cout << "\n=================================";
@@ -288,15 +207,11 @@ class PembukaanRekening {
                 cout << "\nNomor Rekening: " << noRekening;
                 cout << "\n=================================";
 
-                addNasabah(Nasabah(noRekening, fullName, username, password, email));
+                Nasabah nasabah = Nasabah(noRekening, fullName, username, password, email, selectedBranch, phone, selectedSavingType, selectedCardType, noKtp, npwp, religion, birthday, address, job, salary);
+                authentication.addNasabah(nasabah);
                 return 1;
             }
             return 0;
-        }
-
-        void addNasabah(Nasabah _nasabah) {
-            nasabah[registeredNasabah] = &_nasabah;
-            registeredNasabah++;
         }
 
         /// no Rekening = savingTypeCode + branchCode + random7DigitNumber
@@ -348,29 +263,6 @@ class PembukaanRekening {
         }
 };
 
-class Authentication {
-    private:
-        bool loginUser(const string& username, const string& password) {
-            for (int i = 0; i < registeredNasabah; ++i) {
-                if (nasabah[i]->validateLogin(username, password)) {
-                    return true;
-                }
-            }
-            cout << "\nLogin gagal. Username atau password salah.\n" << endl;
-            return false;
-        }
-    public:
-        int auth() {
-            /// login account
-            string username = Helper::inputData("Username");
-            string password = Helper::inputData("Password");
-            if (loginUser(username, password)) {
-                return 1;
-            }
-            return 0;
-        } 
-};
-
 void auth();
 void chooseMenu() {
     cout << "\n=================================";
@@ -417,10 +309,13 @@ void chooseMenu() {
 
 void auth() {
     string registered = Helper::inputData("", "Anda sudah punya akun? [y/n]: ");
+    Helper::clearScreen();
     if (registered == "y" || registered == "yes") {
-        int login_result = Authentication().auth();
-        if (login_result == 1) {
-            cout << "Pilih menu";
+        bool result = authentication.login();
+        if (result == true) {
+            Helper::clearScreen();
+            cout << "\n=================================\n";
+            cout << "Selamat datang, " << authentication.getSignInNasabah().getFullName();
             chooseMenu();
         } else {
             auth();
@@ -428,6 +323,7 @@ void auth() {
     } else {
         int status = PembukaanRekening().start();
         if (status == 1) {
+            Helper::clearScreen();
             cout << "\nApakah Anda ingin memilih layanan lainnya lagi? [y/n]\n";
             string choose = Helper::inputData("Pilihan");
             if (choose == "y" || choose == "yes") {
@@ -439,18 +335,25 @@ void auth() {
     }
 }
 
-void addNasabah(Nasabah _nasabah) {
-    nasabah[registeredNasabah] = &_nasabah;
-    registeredNasabah++;
-}
-
 int main() {
-    cout << "\n=================================";
-    cout << "\n    PERBANKAN KELOMPOK 2         ";
-    cout << "\n=================================\n";
+    cout << "\n------------------------------";
+    cout << "\n    PERBANKAN KELOMPOK 2         \n";
+    cout << "------------------------------\n";
+    cout << "Anggota Kelompok: \n";
+    cout << "1. Yusril Rapsanjani\n";
+    cout << "2. Zaky\n";
+    cout << "3. Aulia\n";
+    cout << "4. Syamil\n";
+    cout << "5. Aziza\n";
+    cout << "6. Budi\n";
+    cout << "7. Padli\n";
+    cout << "8. Gibran\n";
+    cout << "9. Teresia\n";
+    cout << "10. Hasbi\n";
 
     /// Add sample dummy nasabah
-    addNasabah(Nasabah("0100000000000001", "Rizky", "rizky", "123456", "yusril@gmail.com"));
+    Nasabah nasabah = Nasabah("0100000001", "Yusril Rapsanjani", "yusril", "123456", "yusril@gmail.com", "Slipi", "0895346593809", "Tabungan Bisnis", "Gold", "3173032606999", "312322.2323-232.2232", "Islam", "26/06/1999", "Kebun jeruk", "Programmer", 5000000);
+    authentication.addNasabah(nasabah);
     auth();
     return 0;
 }

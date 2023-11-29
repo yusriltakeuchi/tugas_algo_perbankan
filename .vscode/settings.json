@@ -47,5 +47,6 @@
         "typeinfo": "cpp",
         "map": "cpp",
         "iomanip": "cpp"
-    }
+    },
+    "C_Cpp.errorSquiggles": "disabled"
 }
