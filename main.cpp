@@ -53,7 +53,7 @@ class Deposito {
             cout << "\nSumber Rekening Pendebit: " << sumber_rekening_pendebit;
             cout << "\nTenor Deposito: " << tenor_deposito;
             cout << "\nNominal Deposito: Rp" << fixed << setprecision(0) << nominal_deposito;
-            cout << "\nBunga: " << fixed << setprecision(4) << bunga << "%";
+            cout << "\nBunga: " << fixed << setprecision(2) << bunga * 100 << "%";
             cout << "\nBunga Deposito: Rp" << fixed << setprecision(0) << bunga_deposito << "/tahun";
             cout << "\nInstruksi Jatuh Tempo: " << pilihan_instruksi_jatuh_tempo;
             cout << "\n=================================";
@@ -282,10 +282,10 @@ void chooseMenu() {
             status = PembukaanRekening().start();
             break;
         case 2:
-            status = KTA().start();
+            status = Deposito().start();
             break;
         case 3:
-            status = Deposito().start();
+            status = KTA().start();
             break;
         case 4:
             exit(0);
@@ -323,7 +323,6 @@ void auth() {
     } else {
         int status = PembukaanRekening().start();
         if (status == 1) {
-            Helper::clearScreen();
             cout << "\nApakah Anda ingin memilih layanan lainnya lagi? [y/n]\n";
             string choose = Helper::inputData("Pilihan");
             if (choose == "y" || choose == "yes") {
